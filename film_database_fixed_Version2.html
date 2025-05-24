@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قاعدة بيانات الأفلام والمسلسلات</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 20px;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .filter-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .filter-btn.active {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            transform: translateY(-2px);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 12px;
+            text-align: right;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 3px solid #5a67d8;
+        }
+        
+        td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+        
+        tr:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            transform: scale(1.01);
+        }
+        
+        .type-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            color: white;
+            display: inline-block;
+            min-width: 60px;
+        }
+        
+        .movie {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        }
+        
+        .series {
+            background: linear-gradient(45deg, #4834d4, #686de0);
+        }
+        
+        .anime {
+            background: linear-gradient(45deg, #00d2d3, #54a0ff);
+        }
+        
+        .rating {
+            font-weight: bold;
+            padding: 8px 12px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            min-width: 50px;
+            display: inline-block;
+        }
+        
+        .rating-high { background: linear-gradient(45deg, #2ed573, #7bed9f); }
+        .rating-medium { background: linear-gradient(45deg, #ffa726, #ffcc02); }
+        .rating-low { background: linear-gradient(45deg, #ff6b6b, #ee5a24); }
+        
+        .duration {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .plot {
+            max-width: 300px;
+            line-height: 1.4;
+            color: #555;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            color: #7f8c8d;
+            font-size: 1.2rem;
+        }
+        
+        .year {
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                min-width: 100%;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🎬 قاعدة بيانات الأفلام والمسلسلات</h1>
+            <p class="subtitle">مجموعتك الشخصية من الأفلام والمسلسلات المفضلة</p>
+        </div>
+        
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="ابحث عن فيلم أو مسلسل..." id="searchInput">
+                <span class="search-icon">🔍</span>
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-type="all">الكل</button>
+                <button class="filter-btn" data-type="movie">أفلام</button>
+                <button class="filter-btn" data-type="series">مسلسلات</button>
+                <button class="filter-btn" data-type="anime">أنمي</button>
+                <button class="filter-btn" id="ratingSortBtn">أعلى تقييم</button>
+                <button class="filter-btn" id="yearSortBtn">الأحدث</button>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">إجمالي العناصر</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="movieCount">0</div>
+                <div class="stat-label">أفلام</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="seriesCount">0</div>
+                <div class="stat-label">مسلسلات</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="avgRating">0</div>
+                <div class="stat-label">متوسط التقييم</div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="contentTable">
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>النوع</th>
+                        <th>السنة</th>
+                        <th>المدة</th>
+                        <th>التقييم</th>
+                        <th>القصة</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    // قاعدة بيانات أفلام ومسلسلات مصححة ومنسقة
+    const contentDatabase = [
+        {name: "12 Strong", type: "movie", year: 2018, duration: "130 دقيقة", rating: 6.5, plot: "فريق من القوات الخاصة في أفغانستان بعد 11 سبتمبر"},
+        {name: "Batman v Superman: Dawn of Justice", type: "movie", year: 2016, duration: "151 دقيقة", rating: 6.4, plot: "صراع ملحمي بين باتمان وسوبرمان"},
+        {name: "Breaking Bad", type: "series", year: 2008, duration: "62 حلقة", rating: 9.5, plot: "مدرس كيمياء يتحول لصناعة المخدرات"},
+        {name: "Naruto Shippuden: Blood Prison", type: "anime", year: 2011, duration: "108 دقيقة", rating: 7.2, plot: "ناروتو مسجون في سجن هوزوكي كاسل ويجب عليه الهروب وكشف مؤامرة"},
+        {name: "The Dark Knight", type: "movie", year: 2008, duration: "152 دقيقة", rating: 9.0, plot: "باتمان يواجه الجوكر في صراع نفسي وجسدي"},
+        {name: "Friends", type: "series", year: 1994, duration: "10 مواسم", rating: 8.9, plot: "مجموعة أصدقاء يعيشون في نيويورك"},
+        {name: "I Want to Eat Your Pancreas", type: "anime", year: 2018, duration: "108 دقيقة", rating: 8.2, plot: "قصة مؤثرة عن صداقة بين طالب انطوائي وفتاة مريضة"},
+        {name: "Spider-Man: No Way Home", type: "movie", year: 2021, duration: "148 دقيقة", rating: 8.4, plot: "ثلاثة أجيال من سبايدر مان يتحدون لمواجهة أشرار من أكوان متعددة"},
+        {name: "La La Land", type: "movie", year: 2016, duration: "128 دقيقة", rating: 8.0, plot: "قصة حب موسيقية في لوس أنجلوس"},
+        {name: "Avengers: Endgame", type: "movie", year: 2019, duration: "181 دقيقة", rating: 8.4, plot: "المعركة الأخيرة ضد ثانوس حيث يحارب المنتقمون لاستعادة نصف الكون المفقود"},
+        {name: "The Shawshank Redemption", type: "movie", year: 1994, duration: "142 دقيقة", rating: 9.3, plot: "صداقة بين مساجين في أحد أعظم الأفلام على الإطلاق"},
+        {name: "Game of Thrones", type: "series", year: 2011, duration: "8 مواسم", rating: 9.2, plot: "صراع العروش بين عائلات ممالك ويستروس"},
+        {name: "Inside Out", type: "movie", year: 2015, duration: "95 دقيقة", rating: 8.1, plot: "رحلة داخل عقل طفلة لاستكشاف المشاعر"},
+        {name: "Moana", type: "movie", year: 2016, duration: "107 دقيقة", rating: 7.6, plot: "أميرة بولينيزية تسافر عبر المحيط لإنقاذ شعبها"},
+        {name: "Soul", type: "movie", year: 2020, duration: "100 دقيقة", rating: 8.0, plot: "موسيقي جاز يستكشف معنى الحياة بعد حادث يفصل روحه عن جسده"},
+        {name: "Forrest Gump", type: "movie", year: 1994, duration: "142 دقيقة", rating: 8.8, plot: "رجل بسيط يعيش أحداثاً تاريخية مهمة"},
+        {name: "Peaky Blinders", type: "series", year: 2013, duration: "6 مواسم", rating: 8.8, plot: "عصابة بيكي بلايندرز في برمنغهام بعد الحرب العالمية الأولى"},
+        {name: "Perfect Strangers", type: "movie", year: 2016, duration: "97 دقيقة", rating: 7.7, plot: "أصدقاء يكشفون أسرارهم من خلال لعبة الهواتف المحمولة"},
+        {name: "The Godfather", type: "movie", year: 1972, duration: "175 دقيقة", rating: 9.2, plot: "ملحمة عائلة كورليوني الإجرامية الإيطالية الأمريكية"},
+        {name: "Narcos", type: "series", year: 2015, duration: "3 مواسم", rating: 8.8, plot: "قصة بابلو إسكوبار وتجارة الكوكايين في كولومبيا"},
+        {name: "Shang-Chi and the Legend of the Ten Rings", type: "movie", year: 2021, duration: "132 دقيقة", rating: 7.4, plot: "بطل مارفل الآسيوي يواجه ماضيه وأباه الشرير"},
+
+            {name: "Shang-Chi and the Legend of the Ten Rings", type: "movie", year: 2021, duration: "132 دقيقة", rating: 7.4, plot: "بطل مارفل الآسيوي يواجه ماضيه وأباه الشرير"},
+            {name: "Eternals", type: "movie", year: 2021, duration: "156 دقيقة", rating: 6.3, plot: "مجموعة من الكائنات الخالدة تحمي الأرض منذ آلاف السنين"},
+            {name: "Pirates of the Caribbean: The Curse of the Black Pearl", type: "movie", year: 2003, duration: "143 دقيقة", rating: 8.0, plot: "جاك سبارو يحارب القراصنة الملعونين"},
+            {name: "Pirates of the Caribbean: Dead Man's Chest", type: "movie", year: 2006, duration: "151 دقيقة", rating: 7.3, plot: "جاك سبارو يواجه ديفي جونز"},
+            {name: "Pirates of the Caribbean: At World's End", type: "movie", year: 2007, duration: "169 دقيقة", rating: 7.1, plot: "المعركة الأخيرة بين القراصنة وشركة الهند الشرقية"},
+            {name: "Pirates of the Caribbean: On Stranger Tides", type: "movie", year: 2011, duration: "137 دقيقة", rating: 6.6, plot: "جاك سبارو يبحث عن نافورة الشباب"},
+            {name: "Pirates of the Caribbean: Dead Men Tell No Tales", type: "movie", year: 2017, duration: "129 دقيقة", rating: 6.5, plot: "جاك سبارو يواجه الكابتن سالازار"},
+            {name: "Fantasy Island", type: "movie", year: 2020, duration: "109 دقيقة", rating: 4.9, plot: "جزيرة سحرية تحقق الأحلام بطريقة مرعبة"},
+            {name: "Hannibal", type: "movie", year: 2001, duration: "131 دقيقة", rating: 6.8, plot: "تتمة صمت الحملان مع هانيبال ليكتر الهارب"},
+            {name: "Miss Sloane", type: "movie", year: 2016, duration: "132 دقيقة", rating: 7.5, plot: "ضاغطة سياسية قوية تحارب من أجل قوانين السلاح"},
+            {name: "Se7en", type: "movie", year: 1995, duration: "127 دقيقة", rating: 8.6, plot: "محققان يطاردان قاتلاً متسلسلاً يقتل على أساس الخطايا السبع"},
+            {name: "The Devil's Advocate", type: "movie", year: 1997, duration: "144 دقيقة", rating: 7.5, plot: "محامٍ شاب ينضم لشركة محاماة يديرها الشيطان"},
+            {name: "The Dictator", type: "movie", year: 2012, duration: "83 دقيقة", rating: 6.4, plot: "ساشا بارون كوهين كديكتاتور شرق أوسطي"},
+            {name: "The Invisible Man", type: "movie", year: 2020, duration: "124 دقيقة", rating: 7.1, plot: "امرأة تهرب من علاقة مسيئة مع عالم قادر على الاختفاء"},
+            {name: "Underground", type: "movie", year: 2019, duration: "95 دقيقة", rating: 6.1, plot: "فيلم أكشن عن القتال تحت الأرض"},
+            {name: "500 Days of Summer", type: "movie", year: 2009, duration: "95 دقيقة", rating: 7.7, plot: "قصة حب غير تقليدية تحكى بطريقة غير خطية"},
+            {name: "Black Swan", type: "movie", year: 2010, duration: "108 دقيقة", rating: 8.0, plot: "راقصة باليه تفقد عقلها في السعي للكمال"},
+            {name: "Bloodshot", type: "movie", year: 2020, duration: "109 دقيقة", rating: 5.7, plot: "جندي يعود للحياة بتقنية النانو للانتقام"},
+            {name: "Cruella", type: "movie", year: 2021, duration: "134 دقيقة", rating: 7.3, plot: "قصة منشأ كرويلا ديفيل في عالم الموضة في لندن"},
+            {name: "Forrest Gump", type: "movie", year: 1994, duration: "142 دقيقة", rating: 8.8, plot: "رجل بسيط يعيش أحداثاً تاريخية مهمة"},
+            {name: "Frozen", type: "movie", year: 2013, duration: "102 دقيقة", rating: 7.4, plot: "أميرة بقوى الجليد تهرب من مملكتها"},
+            {name: "Frozen 2", type: "movie", year: 2019, duration: "103 دقيقة", rating: 6.8, plot: "إلسا تكتشف أصل قواها في رحلة شمالية"},
+            {name: "Gone Girl", type: "movie", year: 2014, duration: "149 دقيقة", rating: 8.1, plot: "رجل يصبح المشتبه الأول في اختفاء زوجته"},
+            {name: "Good Luck Chuck", type: "movie", year: 2007, duration: "101 دقيقة", rating: 5.6, plot: "رجل ملعون بأن كل من يواعدها تتزوج من الرجل التالي"},
+            {name: "Her", type: "movie", year: 2013, duration: "126 دقيقة", rating: 8.0, plot: "رجل يقع في حب نظام تشغيل ذكي"},
+            {name: "Inception", type: "movie", year: 2010, duration: "148 دقيقة", rating: 8.8, plot: "لص يدخل أحلام الناس لسرقة أو زرع الأفكار"},
+            {name: "Interstellar", type: "movie", year: 2014, duration: "169 دقيقة", rating: 8.6, plot: "مزارع يقود مهمة لإنقاذ البشرية عبر الثقوب الدودية"},
+            {name: "Last Christmas", type: "movie", year: 2019, duration: "103 دقيقة", rating: 6.5, plot: "كوميديا رومانسية مستوحاة من أغنية جورج مايكل"},
+            {name: "Leon: The Professional", type: "movie", year: 1994, duration: "110 دقيقة", rating: 8.5, plot: "قاتل محترف يحمي فتاة صغيرة من رجال الشرطة الفاسدين"},
+            {name: "Long Shot", type: "movie", year: 2019, duration: "125 دقيقة", rating: 6.8, plot: "صحفي يقع في حب صديقة طفولته التي أصبحت وزيرة خارجية"},
+            {name: "Predestination", type: "movie", year: 2014, duration: "97 دقيقة", rating: 7.4, plot: "عميل زمني يطارد مجرماً عبر الزمن"},
+            {name: "Red Notice", type: "movie", year: 2021, duration: "118 دقيقة", rating: 6.3, plot: "عميل إف بي آي يتعاون مع لص فني لالقاء القبض على مجرمة مطلوبة"},
+            {name: "Rush Hour", type: "movie", year: 1998, duration: "98 دقيقة", rating: 7.0, plot: "شرطي هونغ كونغ وأمريكي يتعاونان في لوس أنجلوس"},
+            {name: "Rush Hour 2", type: "movie", year: 2001, duration: "90 دقيقة", rating: 6.6, plot: "الثنائي يواجه الجريمة المنظمة في هونغ كونغ"},
+            {name: "Rush Hour 3", type: "movie", year: 2007, duration: "91 دقيقة", rating: 6.2, plot: "المغامرة الأخيرة للثنائي في باريس"},
+            {name: "Shutter Island", type: "movie", year: 2010, duration: "138 دقيقة", rating: 8.2, plot: "مارشال يحقق في اختفاء مريضة من مستشفى للأمراض العقلية"},
+            {name: "Split", type: "movie", year: 2017, duration: "117 دقيقة", rating: 7.3, plot: "رجل بـ 23 شخصية يختطف ثلاث فتيات"},
+            {name: "The Adam Project", type: "movie", year: 2022, duration: "106 دقيقة", rating: 6.7, plot: "مسافر زمني يلتقي بنفسه الطفل لإنقاذ المستقبل"},
+            {name: "The Hitman's Bodyguard", type: "movie", year: 2017, duration: "118 دقيقة", rating: 6.9, plot: "حارس شخصي يحمي قاتلاً محترفاً"},
+            {name: "The Hunt", type: "movie", year: 2012, duration: "115 دقيقة", rating: 8.3, plot: "معلم يُتهم زوراً بالاعتداء على طفلة"},
+            {name: "The Others", type: "movie", year: 2001, duration: "104 دقيقة", rating: 7.6, plot: "أم وطفلاها في منزل معزول يواجهون أحداثاً خارقة"},
+            {name: "The Power of the Dog", type: "movie", year: 2021, duration: "128 دقيقة", rating: 6.8, plot: "درامة نفسية في الغرب الأمريكي عن الإخوة والسلطة"},
+            {name: "The Professor and the Madman", type: "movie", year: 2019, duration: "124 دقيقة", rating: 7.2, plot: "قصة إنشاء قاموس أكسفورد الإنجليزي"},
+            {name: "The Shawshank Redemption", type: "movie", year: 1994, duration: "142 دقيقة", rating: 9.3, plot: "صداقة بين مساجين في أحد أعظم الأفلام على الإطلاق"},
+            {name: "The Tomorrow War", type: "movie", year: 2021, duration: "138 دقيقة", rating: 6.5, plot: "جنود من المستقبل يجندون أناساً من الحاضر لحرب ضد كائنات فضائية"},
+            {name: "V for Vendetta", type: "movie", year: 2005, duration: "132 دقيقة", rating: 8.2, plot: "ثوري مقنع يحارب حكومة شمولية في بريطانيا المستقبلية"},
+            {name: "What Happened to Monday", type: "movie", year: 2017, duration: "123 دقيقة", rating: 6.8, plot: "سبع أخوات توائم يخفين وجودهن في عالم يحد من الإنجاب"},
+            {name: "Fight Club", type: "movie", year: 1999, duration: "139 دقيقة", rating: 8.8, plot: "موظف مكتب يشكل نادي قتال سري"},
+            {name: "Free Guy", type: "movie", year: 2021, duration: "115 دقيقة", rating: 7.1, plot: "شخصية في لعبة فيديو تكتسب الوعي"},
+            {name: "Friends with Benefits", type: "movie", year: 2011, duration: "109 دقيقة", rating: 6.5, plot: "صديقان يقرران ممارسة الجنس دون ارتباط عاطفي"},
+            {name: "The Change-Up", type: "movie", year: 2011, duration: "112 دقيقة", rating: 6.3, plot: "أب وأعزب يتبادلان الأجساد"},
+            {name: "Harry Potter 20th Anniversary: Return to Hogwarts", type: "movie", year: 2022, duration: "102 دقيقة", rating: 8.0, plot: "لم شمل النجوم للاحتفال بالذكرى العشرين لسلسلة هاري بوتر"},
+            {name: "Harry Potter and the Chamber of Secrets", type: "movie", year: 2002, duration: "161 دقيقة", rating: 7.4, plot: "هاري يواجه وحش حجرة الأسرار في عامه الثاني في هوجوارتس"},
+            {name: "Harry Potter and the Philosopher's Stone", type: "movie", year: 2001, duration: "152 دقيقة", rating: 7.6, plot: "بداية رحلة هاري بوتر في عالم السحر"},
+            {name: "Harry Potter and the Deathly Hallows: Part 1", type: "movie", year: 2010, duration: "146 دقيقة", rating: 7.7, plot: "هاري وأصدقاؤه يبحثون عن الهوركروكسات"},
+            {name: "Harry Potter and the Deathly Hallows: Part 2", type: "movie", year: 2011, duration: "130 دقيقة", rating: 8.1, plot: "المعركة الأخيرة ضد فولدمورت في هوجوارتس"},
+            {name: "Harry Potter and the Goblet of Fire", type: "movie", year: 2005, duration: "157 دقيقة", rating: 7.7, plot: "هاري يشارك في بطولة السحرة الثلاثة وعودة فولدمورت"},
+            {name: "Harry Potter and the Half-Blood Prince", type: "movie", year: 2009, duration: "153 دقيقة", rating: 7.6, plot: "دامبلدور يكشف لهاري أسرار ماضي فولدمورت"},
+            {name: "Harry Potter and the Order of the Phoenix", type: "movie", year: 2007, duration: "138 دقيقة", rating: 7.5, plot: "هاري يشكل جيش دامبلدور لمحاربة العائدين"},
+            {name: "Harry Potter and the Prisoner of Azkaban", type: "movie", year: 2004, duration: "142 دقيقة", rating: 7.9, plot: "هاري يتعلم الحقيقة عن سيريوس بلاك وماضي والديه"},
+                        {name: "I Want to Eat Your Pancreas", type: "anime", year: 2018, duration: "108 دقيقة", rating: 8.2, plot: "قصة مؤثرة عن صداقة بين طالب انطوائي وفتاة مريضة"},
+            {name: "Inside Out", type: "movie", year: 2015, duration: "95 دقيقة", rating: 8.1, plot: "رحلة داخل عقل طفلة لاستكشاف المشاعر"},
+            {name: "Moana", type: "movie", year: 2016, duration: "107 دقيقة", rating: 7.6, plot: "أميرة بولينيزية تسافر عبر المحيط لإنقاذ شعبها"},
+            {name: "My Spy", type: "movie", year: 2020, duration: "99 دقيقة", rating: 6.3, plot: "جاسوس صلب يُكلف بمراقبة عائلة"},
+            {name: "Naruto Shippuden: Blood Prison", type: "anime", year: 2011, duration: "108 دقيقة", rating: 7.2, plot: "ناروتو مسجون في سجن هوزوكي كاسل ويجب عليه الهروب وكشف مؤامرة"},
+            {name: "PK", type: "movie", year: 2014, duration: "153 دقيقة", rating: 8.1, plot: "كائن فضائي يستكشف الأديان والمعتقدات في الهند بطريقة ساخرة ومؤثرة"},
+            {name: "Ready or Not", type: "movie", year: 2019, duration: "95 دقيقة", rating: 6.8, plot: "عروس جديدة تجد نفسها في لعبة قاتلة مع عائلة زوجها الغنية"},
+            {name: "Scary Movie 4", type: "movie", year: 2006, duration: "83 دقيقة", rating: 5.1, plot: "محاكاة ساخرة لأفلام الرعب والخيال العلمي"},
+            {name: "Scary Movie 5", type: "movie", year: 2013, duration: "86 دقيقة", rating: 3.5, plot: "استمرار سلسلة المحاكاة الساخرة لأفلام الرعب"},
+            {name: "The House with a Clock in Its Walls", type: "movie", year: 2018, duration: "105 دقيقة", rating: 6.2, plot: "طفل يكتشف أن عمه ساحر ومنزله مليء بالأسرار السحرية"},
+            {name: "The Man from U.N.C.L.E.", type: "movie", year: 2015, duration: "116 دقيقة", rating: 7.2, plot: "جاسوس أمريكي وروسي يتحدان خلال الحرب الباردة"},
+            {name: "The Rite", type: "movie", year: 2011, duration: "114 دقيقة", rating: 6.0, plot: "كاهن شاب يتعلم طقوس طرد الأرواح الشريرة في الفاتيكان"},
+            {name: "The Tourist", type: "movie", year: 2010, duration: "103 دقيقة", rating: 6.0, plot: "سائح أمريكي يتورط في مؤامرة دولية في البندقية"},
+            {name: "Up", type: "movie", year: 2009, duration: "96 دقيقة", rating: 8.2, plot: "مسن يسافر إلى أمريكا الجنوبية باستخدام منزله المحلق بالبالونات"},
+            {name: "Weathering with You", type: "anime", year: 2019, duration: "114 دقيقة", rating: 7.5, plot: "فتى يلتقي بفتاة لديها قدرة على التحكم في الطقس"},
+            {name: "9", type: "movie", year: 2009, duration: "79 دقيقة", rating: 7.0, plot: "دمى آلية تحارب لإنقاذ البشرية في عالم ما بعد الكارثة"},
+            {name: "1917", type: "movie", year: 2019, duration: "119 دقيقة", rating: 8.3, plot: "جنديان بريطانيان في مهمة محفوفة بالمخاطر خلال الحرب العالمية الأولى"},
+            {name: "Allied", type: "movie", year: 2016, duration: "124 دقيقة", rating: 7.1, plot: "جاسوس كندي وفرنسية يقعان في الحب أثناء مهمة في الحرب العالمية الثانية"},
+            {name: "Atonement", type: "movie", year: 2007, duration: "123 دقيقة", rating: 7.8, plot: "درما تاريخية عن الحب والذنب والفداء في إنجلترا قبل وأثناء الحرب العالمية الثانية"},
+            {name: "Dumb and Dumber", type: "movie", year: 1994, duration: "107 دقيقة", rating: 7.3, plot: "صديقان أحمقان في رحلة عبر أمريكا مليئة بالمواقف المضحكة"},
+            {name: "Dumb and Dumber To", type: "movie", year: 2014, duration: "109 دقيقة", rating: 5.6, plot: "عودة الثنائي الأحمق بعد 20 عاماً في مغامرة جديدة"},
+            {name: "Eternal Sunshine of the Spotless Mind", type: "movie", year: 2004, duration: "108 دقيقة", rating: 8.3, plot: "رجل يمحو ذكريات حبيبته السابقة من عقله في قصة خيال علمي رومانسية عميقة"},
+            {name: "Grimsby", type: "movie", year: 2016, duration: "83 دقيقة", rating: 6.2, plot: "أخ من الطبقة العاملة يفسد مشاريع أخيه الجاسوس"},
+            {name: "In Secret", type: "movie", year: 2013, duration: "101 دقيقة", rating: 6.1, plot: "اقتباس من رواية إميل زولا عن الحب المحرم والقتل"},
+            {name: "Jojo Rabbit", type: "movie", year: 2019, duration: "108 دقيقة", rating: 7.9, plot: "كوميديا مظلمة عن طفل نازي يكتشف أن أمه تخفي فتاة يهودية"},
+            {name: "Mr. Bean's Holiday", type: "movie", year: 2007, duration: "90 دقيقة", rating: 6.4, plot: "مستر بين في إجازة في فرنسا تؤدي لمغامرات مضحكة"},
+            {name: "Scent of a Woman", type: "movie", year: 1992, duration: "156 دقيقة", rating: 8.0, plot: "طالب يرافق عقيد أعمى متقاعد في رحلة إلى نيويورك"},
+            {name: "Soul", type: "movie", year: 2020, duration: "100 دقيقة", rating: 8.0, plot: "موسيقي جاز يستكشف معنى الحياة بعد حادث يفصل روحه عن جسده"},
+            {name: "Sweet November", type: "movie", year: 2001, duration: "119 دقيقة", rating: 6.7, plot: "قصة حب بين رجل أعمال قاس وامرأة حرة الروح"},
+            {name: "Tenet", type: "movie", year: 2020, duration: "150 دقيقة", rating: 7.4, plot: "جاسوس يتعلم تقنية عكس الزمن لمنع حرب عالمية ثالثة"},
+            {name: "The 12th Man", type: "movie", year: 2017, duration: "135 دقيقة", rating: 7.3, plot: "قصة حقيقية عن جندي نرويجي ينجو من النازيين في القطب الشمالي"},
+            {name: "The Pianist", type: "movie", year: 2002, duration: "150 دقيقة", rating: 8.5, plot: "عازف بيانو يهودي ينجو من المحرقة في وارسو"},
+            {name: "The Revenant", type: "movie", year: 2015, duration: "156 دقيقة", rating: 8.0, plot: "صياد يحارب من أجل البقاء بعد هجوم دب في البرية الأمريكية"},
+            {name: "The Sixth Sense", type: "movie", year: 1999, duration: "107 دقيقة", rating: 8.1, plot: "طفل يرى الأرواح يتلقى المساعدة من طبيب نفسي"},
+            {name: "The Skin I Live In", type: "movie", year: 2011, duration: "120 دقيقة", rating: 7.6, plot: "جراح تجميل إسباني ينتقم بطريقة مرعبة ومعقدة"},
+            {name: "The Stoning of Soraya M.", type: "movie", year: 2008, duration: "114 دقيقة", rating: 8.0, plot: "قصة حقيقية مؤلمة عن امرأة إيرانية تتعرض للرجم بالحجارة"},
+            {name: "The Theory of Everything", type: "movie", year: 2014, duration: "123 دقيقة", rating: 7.7, plot: "قصة حياة ستيفن هوكينغ وعلاقته بزوجته الأولى"},
+            {name: "Tom and Jerry", type: "movie", year: 2021, duration: "101 دقيقة", rating: 5.3, plot: "الثنائي الكرتوني الشهير في فيلم حقيقي ورسوم متحركة مختلطة"},
+            {name: "13 Sins", type: "movie", year: 2014, duration: "93 دقيقة", rating: 6.4, plot: "رجل يشارك في لعبة مريبة لحل مشاكله المالية"},
+            {name: "Django Unchained", type: "movie", year: 2012, duration: "165 دقيقة", rating: 8.4, plot: "عبد محرر يصبح صياد جوائز لإنقاذ زوجته"},
+            {name: "Enola Holmes", type: "movie", year: 2020, duration: "123 دقيقة", rating: 6.6, plot: "أخت شيرلوك هولمز الصغيرة تحل أول قضاياها"},
+            {name: "Perfect Strangers", type: "movie", year: 2016, duration: "97 دقيقة", rating: 7.7, plot: "أصدقاء يكشفون أسرارهم من خلال لعبة الهواتف المحمولة"},
+            {name: "The Irishman", type: "movie", year: 2019, duration: "209 دقيقة", rating: 7.8, plot: "ملحمة سكورسيزي عن رجل المافيا فرانك شيران"},
+            {name: "La La Land", type: "movie", year: 2016, duration: "128 دقيقة", rating: 8.0, plot: "قصة حب موسيقية بين عازفة بيانو وممثل طموح في لوس أنجلوس"},
+            {name: "Marriage Story", type: "movie", year: 2019, duration: "137 دقيقة", rating: 7.9, plot: "زوجان يمران بطلاق معقد ومؤثر"},
+            {name: "The Godfather", type: "movie", year: 1972, duration: "175 دقيقة", rating: 9.2, plot: "ملحمة عائلة كورليوني الإجرامية الإيطالية الأمريكية"},
+            {name: "The Godfather Part II", type: "movie", year: 1974, duration: "202 دقيقة", rating: 9.0, plot: "تكملة عبقرية تحكي قصة فيتو كورليوني الشاب ومايكل في الحاضر"},
+            {name: "The Godfather Part III", type: "movie", year: 1990, duration: "162 دقيقة", rating: 7.6, plot: "مايكل كورليوني يحاول الخروج من عالم الجريمة"},
+                        {name: "Beautiful Creatures", type: "movie", year: 2013, duration: "124 دقيقة", rating: 6.1, plot: "قصة حب خارقة للطبيعة بين مراهق وفتاة ساحرة في الجنوب الأمريكي"},
+            {name: "Bruce Almighty", type: "movie", year: 2003, duration: "101 دقيقة", rating: 6.8, plot: "رجل يحصل على قوى الله ليوم واحد"},
+            {name: "Countdown", type: "movie", year: 2019, duration: "90 دقيقة", rating: 5.2, plot: "تطبيق هاتف يخبر المستخدمين متى سيموتون"},
+            {name: "El Cuerpo", type: "movie", year: 2012, duration: "112 دقيقة", rating: 7.4, plot: "إثارة إسبانية حول اختفاء جثة من مشرحة"},
+            {name: "Enemy", type: "movie", year: 2013, duration: "91 دقيقة", rating: 6.9, plot: "رجل يكتشف شبيهه التام في فيلم نفسي معقد"},
+            {name: "Ford v Ferrari", type: "movie", year: 2019, duration: "152 دقيقة", rating: 8.1, plot: "فورد تتحدى فيراري في سباق لومان 24 ساعة"},
+                        // أفلام DC و Marvel
+            {name: "Justice League Dark: Apokolips War", type: "movie", year: 2020, duration: "90 دقيقة", rating: 8.0, plot: "معركة نهائية ضد دارك سايد حيث يواجه أبطال الأرض تهديداً يهدد بتدمير الكون بأكمله"},
+            {name: "Batman v Superman: Dawn of Justice", type: "movie", year: 2016, duration: "151 دقيقة", rating: 6.4, plot: "صراع ملحمي بين أيقونتين من الأبطال الخارقين يكشف عن تهديد أكبر يواجه البشرية"},
+            {name: "Man of Steel", type: "movie", year: 2013, duration: "143 دقيقة", rating: 7.1, plot: "قصة نشأة سوبرمان ورحلته لاكتشاف هويته الحقيقية وحماية الأرض من الغزو الكريبتوني"},
+            {name: "Suicide Squad", type: "movie", year: 2016, duration: "123 دقيقة", rating: 5.9, plot: "مجموعة من الأشرار الخارقين يتم تجنيدهم لمهمة سرية لإنقاذ العالم"},
+            {name: "The Batman", type: "movie", year: 2022, duration: "176 دقيقة", rating: 7.8, plot: "بداية جديدة لبروس واين كباتمان شاب يواجه فساد جوثام ولغز قاتل متسلسل"},
+            {name: "Batman Begins", type: "movie", year: 2005, duration: "140 دقيقة", rating: 8.2, plot: "رحلة بروس واين من رجل منكسر إلى باتمان، حامي جوثام سيتي"},
+            {name: "The Dark Knight", type: "movie", year: 2008, duration: "152 دقيقة", rating: 9.0, plot: "باتمان يواجه أعظم أعدائه الجوكر في معركة نفسية وجسدية تهدد روح جوثام"},
+            {name: "The Dark Knight Rises", type: "movie", year: 2012, duration: "165 دقيقة", rating: 8.4, plot: "الفصل الأخير من ثلاثية نولان حيث يعود باتمان لمواجهة بين التي تهدد بتدمير جوثام"},
+            {name: "Joker", type: "movie", year: 2019, duration: "122 دقيقة", rating: 8.4, plot: "قصة منشأ مظلمة ومؤثرة لأشهر الأشرار في عالم الكوميكس"},
+            
+            // أفلام Marvel
+            {name: "Ant-Man", type: "movie", year: 2015, duration: "117 دقيقة", rating: 7.3, plot: "سكوت لانغ يصبح أنت مان بقوة تمكنه من تغيير حجمه والتحكم في النمل"},
+            {name: "Ant-Man and the Wasp", type: "movie", year: 2018, duration: "118 دقيقة", rating: 7.0, plot: "أنت مان والدبور يتحدان لكشف أسرار من الماضي ومواجهة تهديد جديد"},
+            {name: "Avengers: Endgame", type: "movie", year: 2019, duration: "181 دقيقة", rating: 8.4, plot: "المعركة الأخيرة ضد ثانوس حيث يحارب المنتقمون لاستعادة نصف الكون المفقود"},
+            {name: "Avengers: Age of Ultron", type: "movie", year: 2015, duration: "141 دقيقة", rating: 7.3, plot: "المنتقمون يواجهون ألترون، ذكاء اصطناعي يهدد بإبادة البشرية"},
+            {name: "Avengers: Infinity War", type: "movie", year: 2018, duration: "149 دقيقة", rating: 8.4, plot: "ثانوس يجمع أحجار اللانهاية بينما يحاول المنتقمون إيقافه"},
+            {name: "Black Panther", type: "movie", year: 2018, duration: "134 دقيقة", rating: 7.3, plot: "تشالا يصبح ملك واكاندا ويواجه تحديات تهدد بلاده وتراثه"},
+            {name: "Captain America: Civil War", type: "movie", year: 2016, duration: "147 دقيقة", rating: 7.8, plot: "انقسام المنتقمون حول اتفاقيات سوكوفيا مما يؤدي لحرب أهلية بين الأبطال"},
+            {name: "Captain America: The First Avenger", type: "movie", year: 2011, duration: "124 دقيقة", rating: 6.9, plot: "ستيف روجرز يتحول من شاب ضعيف إلى كابتن أمريكا أول الأبطال الخارقين"},
+            {name: "Captain America: The Winter Soldier", type: "movie", year: 2014, duration: "136 دقيقة", rating: 7.7, plot: "كابتن أمريكا يكتشف مؤامرة داخل الشيلد ويواجه صديقه القديم الجندي الشتوي"},
+            {name: "Captain Marvel", type: "movie", year: 2019, duration: "123 دقيقة", rating: 6.8, plot: "كارول دانفرز تكتشف قواها الحقيقية وتصبح إحدى أقوى البطلات في الكون"},
+            {name: "Doctor Strange", type: "movie", year: 2016, duration: "115 دقيقة", rating: 7.5, plot: "جراح متعجرف يصبح ساحراً قوياً بعد حادث يغير حياته"},
+            {name: "Guardians of the Galaxy", type: "movie", year: 2014, duration: "121 دقيقة", rating: 8.0, plot: "مجموعة غير متوقعة من المجرمين يصبحون أبطالاً لإنقاذ المجرة"},
+            {name: "Guardians of the Galaxy Vol. 2", type: "movie", year: 2017, duration: "136 دقيقة", rating: 7.6, plot: "حراس المجرة يكتشفون أسرار ماضي بيتر كويل ويواجهون تهديداً كونياً"},
+            {name: "Iron Man", type: "movie", year: 2008, duration: "126 دقيقة", rating: 7.9, plot: "توني ستارك يبني بدلة آيرون مان ويبدأ عصر الأبطال الخارقين"},
+            {name: "Iron Man 2", type: "movie", year: 2010, duration: "124 دقيقة", rating: 7.0, plot: "توني ستارك يواجه مشاكل صحية وأعداء جدد يريدون تكنولوجيا آيرون مان"},
+            {name: "Iron Man 3", type: "movie", year: 2013, duration: "130 دقيقة", rating: 7.1, plot: "توني ستارك يواجه الماندرين في قصة شخصية تكشف جوانب جديدة من شخصيته"},
+            {name: "Spider-Man: Far From Home", type: "movie", year: 2019, duration: "129 دقيقة", rating: 7.4, plot: "بيتر باركر في رحلة أوروبية يواجه تهديداً جديداً مع ميستيريو"},
+            {name: "Spider-Man: Homecoming", type: "movie", year: 2017, duration: "133 دقيقة", rating: 7.4, plot: "بداية سبايدر مان الجديدة في عالم مارفل السينمائي"},
+            {name: "The Avengers", type: "movie", year: 2012, duration: "143 دقيقة", rating: 8.0, plot: "تجمع الأبطال الخارقين لأول مرة لمواجهة غزو لوكي للأرض"},
+            {name: "The Incredible Hulk", type: "movie", year: 2008, duration: "112 دقيقة", rating: 6.7, plot: "بروس بانر يحاول السيطرة على الوحش الأخضر بداخله"},
+            {name: "Thor", type: "movie", year: 2011, duration: "115 دقيقة", rating: 7.0, plot: "أمير أسجارد المتغطرس يتعلم التواضع والمسؤولية على الأرض"},
+            {name: "Thor: Ragnarok", type: "movie", year: 2017, duration: "130 دقيقة", rating: 7.9, plot: "ثور محبوس في كوكب ساكار بينما تواجه أسجارد تهديد راجناروك"},
+            {name: "Thor: The Dark World", type: "movie", year: 2013, duration: "112 دقيقة", rating: 6.8, plot: "ثور يحارب الإلف المظلم لحماية التسعة عوالم"},
+            
+            // أفلام Spider-Man الكلاسيكية
+            {name: "Spider-Man", type: "movie", year: 2002, duration: "121 دقيقة", rating: 7.3, plot: "بيتر باركر يصبح سبايدر مان ويواجه الجوبلين الأخضر"},
+            {name: "Spider-Man 2", type: "movie", year: 2004, duration: "127 دقيقة", rating: 7.3, plot: "سبايدر مان يواجه دكتور أوكتوبوس في واحد من أفضل أفلام الأبطال الخارقين"},
+            {name: "Spider-Man 3", type: "movie", year: 2007, duration: "139 دقيقة", rating: 6.2, plot: "سبايدر مان يواجه فينوم وساندمان في معركة مصيرية"},
+            {name: "The Amazing Spider-Man", type: "movie", year: 2012, duration: "136 دقيقة", rating: 6.9, plot: "إعادة تخيل لقصة سبايدر مان مع أندرو جارفيلد"},
+            {name: "The Amazing Spider-Man 2", type: "movie", year: 2014, duration: "142 دقيقة", rating: 6.6, plot: "سبايدر مان يواجه إلكترو وأعداء متعددين"},
+            {name: "Spider-Man: Into the Spider-Verse", type: "movie", year: 2018, duration: "117 دقيقة", rating: 8.4, plot: "فيلم رسوم متحركة ثوري يجمع عدة إصدارات من سبايدر مان"},
+            {name: "Spider-Man: No Way Home", type: "movie", year: 2021, duration: "148 دقيقة", rating: 8.4, plot: "ثلاثة أجيال من سبايدر مان يتحدون لمواجهة أشرار من أكوان متعددة"},
+            
+            // أفلام X-Men
+            {name: "Logan", type: "movie", year: 2017, duration: "137 دقيقة", rating: 8.1, plot: "ولفرين المسن في رحلته الأخيرة لحماية لورا الطفلة الطافرة"},
+            {name: "X-Men: First Class", type: "movie", year: 2011, duration: "131 دقيقة", rating: 7.7, plot: "بداية صداقة تشارلز زيفيير وإيريك لينشر وتأسيس إكس مين"},
+            {name: "X-Men: Apocalypse", type: "movie", year: 2016, duration: "144 دقيقة", rating: 6.9, plot: "أقوى طافرة في التاريخ يستيقظ ليدمر العالم"},
+            {name: "X-Men Origins: Wolverine", type: "movie", year: 2009, duration: "107 دقيقة", rating: 6.5, plot: "قصة منشأ ولفرين وتجاربه في برنامج الأسلحة إكس"},
+            {name: "X-Men: The Last Stand", type: "movie", year: 2006, duration: "104 دقيقة", rating: 6.7, plot: "حرب بين الطفرات والبشر حول علاج الطفرة"},
+            {name: "X2: X-Men United", type: "movie", year: 2003, duration: "134 دقيقة", rating: 7.4, plot: "إكس مين يتحدون مع أعدائهم لمواجهة تهديد مشترك"},
+            {name: "X-Men", type: "movie", year: 2000, duration: "104 دقيقة", rating: 7.4, plot: "بداية ملحمة إكس مين السينمائية"},
+            {name: "X-Men: Days of Future Past", type: "movie", year: 2014, duration: "132 دقيقة", rating: 7.9, plot: "ولفرين يسافر عبر الزمن لمنع مستقبل مدمر"},
+            {name: "Deadpool", type: "movie", year: 2016, duration: "108 دقيقة", rating: 8.0, plot: "بطل خارق ساخر يكسر الجدار الرابع في فيلم كوميدي عنيف"},
+            {name: "Deadpool 2", type: "movie", year: 2018, duration: "119 دقيقة", rating: 7.7, plot: "ديدبول يشكل فريق إكس فورس لحماية طفل طافرة"},
+            {name: "Venom", type: "movie", year: 2018, duration: "112 دقيقة", rating: 6.6, plot: "صحفي يندمج مع كائن فضائي طفيلي ليصبح فينوم"},
+            {name: "Venom: Let There Be Carnage", type: "movie", year: 2021, duration: "97 دقيقة", rating: 5.9, plot: "فينوم يواجه كارنيج في معركة دموية"},
+            {name: "Justice League Dark Apokolips War", type: "movie", year: 2020, duration: "", rating: null, plot: ""},
+{name: "Batman V Superman Dawn Of Justice", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "Man Of Steel", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Suicide Squad", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "The Batman", type: "movie", year: 2022, duration: "", rating: null, plot: ""},
+{name: "Batman Begins", type: "movie", year: 2005, duration: "", rating: null, plot: ""},
+{name: "The Dark Knight", type: "movie", year: 2008, duration: "", rating: null, plot: ""},
+{name: "The Dark Knight Rises", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "Joker", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Ant Man", type: "movie", year: 2015, duration: "", rating: null, plot: ""},
+{name: "Ant Man And Wasp", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "Avengers Endgame", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Avengers Age Of Ultron", type: "movie", year: 2015, duration: "", rating: null, plot: ""},
+{name: "Avengers Infinity War", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "Black Panther", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "Captain America Civil War", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "Captain America The First Avengers", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "Captin America The Winter Soldier", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Captin Marvel", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Doctor Strange", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "Guardians Of The Galaxy", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Guardians Of The Galaxy 2", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "Iron Man I", type: "movie", year: 2008, duration: "", rating: null, plot: ""},
+{name: "Iron Man Ii", type: "movie", year: 2010, duration: "", rating: null, plot: ""},
+{name: "Iron Man Iii", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Spider Man Far From Home", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Spider Man Homecoming", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "The Avengers", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "The Incredible Hulk", type: "movie", year: 2008, duration: "", rating: null, plot: ""},
+{name: "Thor", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "Thor Ragnarok", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "Thor The Dark World", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Spider Man I", type: "movie", year: 2002, duration: "", rating: null, plot: ""},
+{name: "Spider Man Ii", type: "movie", year: 2004, duration: "", rating: null, plot: ""},
+{name: "Spider Man Iii", type: "movie", year: 2007, duration: "", rating: null, plot: ""},
+{name: "The Amazing Spider Man I", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "The Amazing Spider Man Ii", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Spider Man Into The Spider Verse", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "Logan", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "X.Men First Calss", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "X.Men Apocalypse", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "X.Men Origins Wolverine", type: "movie", year: 2009, duration: "", rating: null, plot: ""},
+{name: "X Man The Last Stand", type: "movie", year: 2006, duration: "", rating: null, plot: ""},
+{name: "X Men Ii", type: "movie", year: 2003, duration: "", rating: null, plot: ""},
+{name: "X Men I", type: "movie", year: 2000, duration: "", rating: null, plot: ""},
+{name: "X Men Days Of Future Past", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Deadpool 2 Super Duper Unrated", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "Deadpool", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "Venom", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "Beautiful Creatures", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Bruce Almighty", type: "movie", year: 2003, duration: "", rating: null, plot: ""},
+{name: "Countdown", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "El Cuerpo", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "Enemy", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Ford V Ferrari", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Gekijouban......", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Want To Eat Your Pancreas", type: "anime", year: 2018, duration: "", rating: null, plot: ""},
+{name: "Inside Out", type: "movie", year: 2015, duration: "", rating: null, plot: ""},
+{name: "Kingsman The Secret Service", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Moana", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "Mosafer Halab Istanbul", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "My Spy", type: "movie", year: 2020, duration: "", rating: null, plot: ""},
+{name: "Naruto Shippuden The Movie Blood Priseo", type: "anime", year: 2011, duration: "", rating: null, plot: ""},
+{name: "Pk", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Ready Or Not", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Scary Movie Iiii", type: "movie", year: 2006, duration: "", rating: null, plot: ""},
+{name: "Scary Movie Iiiii", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "The House With A Clock In Its A Walls", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "The Man Froe Uncle", type: "movie", year: 2015, duration: "", rating: null, plot: ""},
+{name: "The Rite", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "The Tourist", type: "movie", year: 2010, duration: "", rating: null, plot: ""},
+{name: "Up", type: "movie", year: 2009, duration: "", rating: null, plot: ""},
+{name: "Weathering With You", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "9", type: "movie", year: 2009, duration: "", rating: null, plot: ""},
+{name: "1917", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Bala Heeba", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Allied", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "Atonement", type: "movie", year: 2007, duration: "", rating: null, plot: ""},
+{name: "Dumb And Dumber", type: "movie", year: 1994, duration: "", rating: null, plot: ""},
+{name: "Dumb And Dumber Ii", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Eternal Sunshine Of The Spotless Mind", type: "movie", year: 2004, duration: "", rating: null, plot: ""},
+{name: "Grimsby", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "In Secret", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Jojo Rabbit", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Mr Beans Holiday", type: "movie", year: 2007, duration: "", rating: null, plot: ""},
+{name: "Scent Of Woman", type: "movie", year: 1992, duration: "", rating: null, plot: ""},
+{name: "Soul", type: "movie", year: 2020, duration: "", rating: null, plot: ""},
+{name: "Sweet November", type: "movie", year: 2001, duration: "", rating: null, plot: ""},
+{name: "Tenet", type: "movie", year: 2020, duration: "", rating: null, plot: ""},
+{name: "The 12Th Man", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "The Pianist", type: "movie", year: 2002, duration: "", rating: null, plot: ""},
+{name: "The Revenant", type: "movie", year: 2015, duration: "", rating: null, plot: ""},
+{name: "The Sixth Sense", type: "movie", year: 1999, duration: "", rating: null, plot: ""},
+{name: "The Skin I Live In", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "The Stoning Of Soraya M", type: "movie", year: 2008, duration: "", rating: null, plot: ""},
+{name: "The Teory Of Everything", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Tom And Jerry", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "13 Sins", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Django Unchained", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "Enola Holmes", type: "movie", year: 2020, duration: "", rating: null, plot: ""},
+{name: "Perfect Strangers", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "The Irishman", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "La La Land", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "Marriage Story", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "The Godrahter I", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Godrahter Ii", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Godrahter Iii", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Moves", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Harry Potter 20Th Anniversary Return To Hogwarts", type: "movie", year: 2022, duration: "", rating: null, plot: ""},
+{name: "Harry Potter Ad The Chamber Of Secrets", type: "movie", year: 2002, duration: "", rating: null, plot: ""},
+{name: "Harry Potter And The Sorceres Stone", type: "movie", year: 2001, duration: "", rating: null, plot: ""},
+{name: "Harry Potter And The Deathly Hallows Part 1", type: "movie", year: 2010, duration: "", rating: null, plot: ""},
+{name: "Harry Potter And The Deathly Hallows Part 2", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "Harry Potter And The Goblet Of Fire", type: "movie", year: 2005, duration: "", rating: null, plot: ""},
+{name: "Harry Potter And The Half Blood Prince", type: "movie", year: 2009, duration: "", rating: null, plot: ""},
+{name: "Harry Potter And The Order Of The Phoenix", type: "movie", year: 2007, duration: "", rating: null, plot: ""},
+{name: "Harry Potter And The Prisoner Of Azkaban", type: "movie", year: 2004, duration: "", rating: null, plot: ""},
+{name: "Shang Chi And The Legend Of The Ten Ring", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "Eternals", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "Venom Let There Be Carnage", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "Pirates Of The Caribbean 1", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Pirates Of The Caribbean 2", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Pirates Of The Caribbean 3", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Pirates Of The Caribbean 4", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Pirates Of The Caribbean 5", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Fantasy Island", type: "movie", year: 2020, duration: "", rating: null, plot: ""},
+{name: "Hannibal", type: "movie", year: 2001, duration: "", rating: null, plot: ""},
+{name: "Miss Sloane", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "Ragnarok", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Rough Night", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "Se7En", type: "movie", year: 1995, duration: "", rating: null, plot: ""},
+{name: "The Devils Advovate", type: "movie", year: 1997, duration: "", rating: null, plot: ""},
+{name: "The Dictator", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "The Invisiblr Man", type: "movie", year: 2020, duration: "", rating: null, plot: ""},
+{name: "The Naked Mile", type: "movie", year: 2006, duration: "", rating: null, plot: ""},
+{name: "Underground", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "12 Strong", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "500 Days Of Summer", type: "movie", year: 2009, duration: "", rating: null, plot: ""},
+{name: "A Walk To Remember", type: "movie", year: 2002, duration: "", rating: null, plot: ""},
+{name: "Black Swan", type: "movie", year: 2010, duration: "", rating: null, plot: ""},
+{name: "Bloodshot", type: "movie", year: 2020, duration: "", rating: null, plot: ""},
+{name: "Brother", type: "movie", year: 2002, duration: "", rating: null, plot: ""},
+{name: "Cruella", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "Forrest Gump", type: "movie", year: 1994, duration: "", rating: null, plot: ""},
+{name: "Frozen 201", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Frozen 2", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Gone Girl", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Good Luck Chuck", type: "movie", year: 2007, duration: "", rating: null, plot: ""},
+{name: "Her", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Inception", type: "movie", year: 2010, duration: "", rating: null, plot: ""},
+{name: "Interstellar", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Last Christmas", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Leon The Professional", type: "movie", year: 1994, duration: "", rating: null, plot: ""},
+{name: "Long Shot", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Melena", type: "movie", year: 2000, duration: "", rating: null, plot: ""},
+{name: "Midnight Sun", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "Predestination", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Red Notice", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "Rush Hours 2", type: "movie", year: 2001, duration: "", rating: null, plot: ""},
+{name: "Rush Hours 1", type: "movie", year: 1998, duration: "", rating: null, plot: ""},
+{name: "Rush Hours 3", type: "movie", year: 2007, duration: "", rating: null, plot: ""},
+{name: "Shutter Island", type: "movie", year: 2010, duration: "", rating: null, plot: ""},
+{name: "Split", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "The Adam Project", type: "movie", year: 2022, duration: "", rating: null, plot: ""},
+{name: "The Devils Advocate", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Electrical Life Of Louis Wain", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "The Hitmans Bodygaurd", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "The Hunt", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "The Others", type: "movie", year: 2001, duration: "", rating: null, plot: ""},
+{name: "The Power Of The Dog", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "The Professor And The Madman", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "The Shawshank Redemption", type: "movie", year: 1994, duration: "", rating: null, plot: ""},
+{name: "The Tomorrow War", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "V For Vendetta", type: "movie", year: 2005, duration: "", rating: null, plot: ""},
+{name: "What Happend To Monday", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "13 Sins 20140", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "All The Bright Places", type: "movie", year: 2022, duration: "", rating: null, plot: ""},
+{name: "Djsngo Unchained", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "Ectraction", type: "movie", year: 2020, duration: "", rating: null, plot: ""},
+{name: "Fight Club", type: "movie", year: 1999, duration: "", rating: null, plot: ""},
+{name: "Free Guy", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "Friends With Benefits", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "Sweet Girls", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "The Change Up", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "The Wolf Of Wall Streeet", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Those Who Wish Me Dead", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "Waafet Reggala", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "Once Upon A Time In Hollywood", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Ruby Sparks", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "Warth Of Man", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "Ashab Wala A3Z", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Beauiful Creatures", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Bohemain Rhapsody", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "Gekijouban Danjon Ni Deai O Motomeru No Wa....", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Gladiator", type: "movie", year: 2000, duration: "", rating: null, plot: ""},
+{name: "Horrible Bosses 2", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "I Want To Eat Your Pancreas", type: "anime", year: 2018, duration: "", rating: null, plot: ""},
+{name: "L.A.Confidential", type: "movie", year: 1997, duration: "", rating: null, plot: ""},
+{name: "Naruto Shippuden The Movie Blood Prison", type: "anime", year: 2011, duration: "", rating: null, plot: ""},
+{name: "Pawn Sacrifice", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Scary Movie 4", type: "movie", year: 2006, duration: "", rating: null, plot: ""},
+{name: "Scary Movie 5", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "The Curious Case Of Benjamin Button", type: "movie", year: 2008, duration: "", rating: null, plot: ""},
+{name: "The House With A Clock In Its Walls", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "The Man From U.N.C.L.E", type: "movie", year: 2015, duration: "", rating: null, plot: ""},
+{name: "The Shining", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Usual Suspects", type: "movie", year: 1995, duration: "", rating: null, plot: ""},
+{name: "American History X", type: "movie", year: 1998, duration: "", rating: null, plot: ""},
+{name: "Arousty", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "Baby Driver", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "Dumb And Dumber 2", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Foucs", type: "movie", year: 2015, duration: "", rating: null, plot: ""},
+{name: "Haksaw Ridge", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "Maleficent", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Maleficent Mistress Of Evil", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Manchester By The Sea", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "Mr And Mrs Smith", type: "movie", year: 2005, duration: "", rating: null, plot: ""},
+{name: "Primal Fear", type: "movie", year: 1996, duration: "", rating: null, plot: ""},
+{name: "Scent Of A Woman", type: "movie", year: 1992, duration: "", rating: null, plot: ""},
+{name: "Sherlock Holmes", type: "movie", year: 2009, duration: "", rating: null, plot: ""},
+{name: "Sherlock Holmes A Game Of Shadows", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "Spider Man No Way Home", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "The Autopsy Of Jane Doe", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "The Great Gatsby", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "The Hitmans Wifes Bodyguard", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "The Lmitation Game", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "The Intouchables", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "The Place", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "The Stonong Of Soraya M", type: "movie", year: 2008, duration: "", rating: null, plot: ""},
+{name: "The Theory Of Everything", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Thor Love And Thunder", type: "movie", year: 2022, duration: "", rating: null, plot: ""},
+{name: "The Godfather I", type: "movie", year: 1972, duration: "", rating: null, plot: ""},
+{name: "The Godfather Ii", type: "movie", year: 1974, duration: "", rating: null, plot: ""},
+{name: "The Godfather Iii", type: "movie", year: 1990, duration: "", rating: null, plot: ""},
+{name: "The Hangover I", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Hangover Ii", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Hangover Iii", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Banshee", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Barbarians", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Better Call Saul", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Breaking Bad", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Chernobyl", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Da.Vincis", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Elite", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Friends", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "How I Met Your Mother ( Himyam  )", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "House", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Legacies", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Lucifer", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Prison.Break", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Sherlock", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Supernatural", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Taboo", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The 100", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Punisher", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Wanda Vision", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "You S12", type: "series", year: null, duration: "", rating: null, plot: ""},
+{name: "Black Hawk Down", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "The Green Mile", type: "movie", year: 1999, duration: "", rating: null, plot: ""},
+{name: "Lock Stock And Tow Smoking Barrels", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Last Vegas", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Children Of Heaven", type: "movie", year: 1997, duration: "", rating: null, plot: ""},
+{name: "Avatar", type: "movie", year: 2009, duration: "", rating: null, plot: ""},
+{name: "Who Am I Kein", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "The Terminal", type: "movie", year: 2004, duration: "", rating: null, plot: ""},
+{name: "Amadeus", type: "movie", year: 1984, duration: "", rating: null, plot: ""},
+{name: "Whould You Rather", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "Grey Hound", type: "movie", year: 2020, duration: "", rating: null, plot: ""},
+{name: "American Beauty", type: "movie", year: 1998, duration: "", rating: null, plot: ""},
+{name: "Transformers", type: "movie", year: 2007, duration: "", rating: null, plot: ""},
+{name: "Transformers Revenge Of The Fallen", type: "movie", year: 2009, duration: "", rating: null, plot: ""},
+{name: "The Wild Robot", type: "movie", year: 2024, duration: "", rating: null, plot: ""},
+{name: "The Holdovers", type: "movie", year: 2023, duration: "", rating: null, plot: ""},
+{name: "Star War 1977-->2019", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "How To Train Your Dragon 1.2.3.4", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Time To Kill", type: "movie", year: 1996, duration: "", rating: null, plot: ""},
+{name: "Harry Potter Full", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Heat", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Reservoir Dogs", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Insomina", type: "movie", year: 2002, duration: "", rating: null, plot: ""},
+{name: "The Nice Guys", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "The Hateful Eight", type: "movie", year: 2015, duration: "", rating: null, plot: ""},
+{name: "American Gangster", type: "movie", year: 2007, duration: "", rating: null, plot: ""},
+{name: "Ted 1", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "Ted 2", type: "movie", year: 2015, duration: "", rating: null, plot: ""},
+{name: "James Bond , Quantum Of Solace", type: "movie", year: 2008, duration: "", rating: null, plot: ""},
+{name: "James Bond , Casino Royale", type: "movie", year: 2006, duration: "", rating: null, plot: ""},
+{name: "Venom 3", type: "movie", year: 2024, duration: "", rating: null, plot: ""},
+{name: "American Psycho", type: "movie", year: 2000, duration: "", rating: null, plot: ""},
+{name: "Dead Pool", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "Dunkirk", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "Fury", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Ant Man And The Wasp", type: "movie", year: 2018, duration: "", rating: null, plot: ""},
+{name: "Captain America The First Avenger", type: "movie", year: 2011, duration: "", rating: null, plot: ""},
+{name: "Captain America The Winter Soldier", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Captain Marvel", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Guardian Of The Galaxy", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Iron Man", type: "movie", year: 2008, duration: "", rating: null, plot: ""},
+{name: "Spider Man", type: "movie", year: 2002, duration: "", rating: null, plot: ""},
+{name: "The Amazing Spider Man", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "The Fault In Our Stars", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Dune 2021 .", type: "movie", year: 2024, duration: "", rating: null, plot: ""},
+{name: "Extraction 2020 .", type: "movie", year: 2023, duration: "", rating: null, plot: ""},
+{name: "Chernobyl Diaries", type: "movie", year: 2012, duration: "", rating: null, plot: ""},
+{name: "The Mast", type: "movie", year: 1994, duration: "", rating: null, plot: ""},
+{name: "The Wolf Of Wall Street", type: "movie", year: 2013, duration: "", rating: null, plot: ""},
+{name: "Harry Potter 2.4.5.9.10.11", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Insidious 10,13,15,18,23", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "It 2017 ,", type: "movie", year: 2019, duration: "", rating: null, plot: ""},
+{name: "Jeepers Creepers 2001,2003", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Jumanji 2017,2019", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Lord Of The Rings 1,2,3", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Pirate Of The Caribbean 3,6,7,11,17", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The God Father I Ii Iii", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Oppenheimer", type: "movie", year: 2023, duration: "", rating: null, plot: ""},
+{name: "Savings Private Ryan", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Edge Of Tomorrow", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "El Camino Breaking Bad", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Forgotten", type: "movie", year: 2017, duration: "", rating: null, plot: ""},
+{name: "Frequency", type: "movie", year: 2000, duration: "", rating: null, plot: ""},
+{name: "Lala Land", type: "movie", year: 2016, duration: "", rating: null, plot: ""},
+{name: "Malignant", type: "movie", year: 2021, duration: "", rating: null, plot: ""},
+{name: "Night Crawlers", type: "movie", year: 2014, duration: "", rating: null, plot: ""},
+{name: "Better Call Soal 1---> 6", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Dark Matter", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Fallout", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Family Guy", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Doctor House", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Inazuma Eleven", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Presumed Innocent", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Rick And Morty", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Silo", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Wallking Dead", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "3", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Land Man", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Disclaimer", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Jujutsu Kaisen", type: "anime", year: null, duration: "", rating: null, plot: ""},
+{name: "Arcane", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Peaky Blinders 1.2.3.6", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "House Of The Dragon S1", type: "series", year: null, duration: "", rating: null, plot: ""},
+{name: "Prison Break", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The 100 S 1 E 1 Miss", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Punisher Miss S2 E4", type: "series", year: null, duration: "", rating: null, plot: ""},
+{name: "Black Mirror 1.2.3", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Daredevil", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "From", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Game Of Thrones (Miss S6 ) Change S1 Quality", type: "series", year: null, duration: "", rating: null, plot: ""},
+{name: "Monster", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Mr Robot", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Narkos Miss S3E4", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Boys Miss S4E5.8", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "The Last Of Us", type: "movie", year: null, duration: "", rating: null, plot: ""},
+{name: "Valhalla Miss S1E7", type: "series", year: null, duration: "", rating: null, plot: ""},
+{name: "Wednesday", type: "movie", year: null, duration: "", rating: null, plot: ""},
+  // DC Movies
+  {name: "Justice League Dark: Apokolips War", type: "movie", year: 2020, duration: "90 دقيقة", rating: 8.0, plot: "معركة نهائية ضد دارك سايد حيث يواجه أبطال الأرض تهديداً يهدد بتدمير الكون بأكمله"},
+  {name: "Batman v Superman: Dawn of Justice", type: "movie", year: 2016, duration: "151 دقيقة", rating: 6.4, plot: "نزاع بين باتمان وسوبرمان حول كيفية التعامل مع العدالة في العالم"},
+  {name: "Man of Steel", type: "movie", year: 2013, duration: "143 دقيقة", rating: 7.0, plot: "قصة أصل سوبرمان وكيف أصبح حامي الأرض"},
+  {name: "Suicide Squad", type: "movie", year: 2016, duration: "123 دقيقة", rating: 5.9, plot: "مجموعة من الأشرار يتم تجنيدهم للقيام بمهمة خطيرة لصالح الحكومة"},
+  {name: "The Batman", type: "movie", year: 2022, duration: "176 دقيقة", rating: 7.8, plot: "باتمان في بداياته يحقق في سلسلة جرائم غامضة في مدينة غوثام"},
+  {name: "Batman Begins", type: "movie", year: 2005, duration: "140 دقيقة", rating: 8.2, plot: "قصة أصل باتمان وكيف أصبح فارس الظلام"},
+  {name: "The Dark Knight", type: "movie", year: 2008, duration: "152 دقيقة", rating: 9.0, plot: "باتمان يواجه الجوكر الذي يريد إثبات الفوضى في غوثام"},
+  {name: "The Dark Knight Rises", type: "movie", year: 2012, duration: "164 دقيقة", rating: 8.4, plot: "المواجهة النهائية بين باتمان وبين مع عدوه اللدود بين"},
+  {name: "Joker", type: "movie", year: 2019, duration: "122 دقيقة", rating: 8.4, plot: "قصة أصل الجوكر وكيف تحول من كوميدي فاشل إلى مجرم شرير"},
+
+  // Marvel Movies
+  {name: "Ant-Man", type: "movie", year: 2015, duration: "117 دقيقة", rating: 7.3, plot: "لص يحصل على بدلة تمكنه من التقلص في الحجم ولكن مع قوة هائلة"},
+  {name: "Ant-Man and the Wasp", type: "movie", year: 2018, duration: "118 دقيقة", rating: 7.0, plot: "انت مان وواسب يعملان معاً لإنقاذ زوجته من العالم الكمي"},
+  {name: "Avengers: Endgame", type: "movie", year: 2019, duration: "181 دقيقة", rating: 8.4, plot: "الأبطال يجتمعون لإعادة الذين اختفوا بعد نقر ثانوس"},
+  {name: "Avengers: Age of Ultron", type: "movie", year: 2015, duration: "141 دقيقة", rating: 7.3, plot: "الأفنجرز يواجهون روبوت ذكاء اصطناعي خرج عن السيطرة"},
+  {name: "Avengers: Infinity War", type: "movie", year: 2018, duration: "149 دقيقة", rating: 8.4, plot: "الأفنجرز يحاولون منع ثانوس من جمع أحجار القوة الستة"},
+  {name: "Black Panther", type: "movie", year: 2018, duration: "134 دقيقة", rating: 7.3, plot: "ملك واكاندا الجديد يحمي مملكته وأسرارها من الأعداء"},
+  {name: "Captain America: Civil War", type: "movie", year: 2016, duration: "147 دقيقة", rating: 7.8, plot: "انقسام بين الأبطال حول قانون تسجيل الأفراد الخارقين"},
+  {name: "Captain America: The First Avenger", type: "movie", year: 2011, duration: "124 دقيقة", rating: 6.9, plot: "قصة كيف أصبح ستيف روجرز كابتن أمريكا خلال الحرب العالمية الثانية"},
+  {name: "Captain America: The Winter Soldier", type: "movie", year: 2014, duration: "136 دقيقة", rating: 7.7, plot: "كابتن أمريكا يواجه صديقه القديم الذي تحول إلى قاتل"},
+  {name: "Captain Marvel", type: "movie", year: 2019, duration: "123 دقيقة", rating: 6.8, plot: "طيار سابق تكتشف أنها تمتلك قوى خارقة وتنضم إلى معركة كونية"},
+  {name: "Doctor Strange", type: "movie", year: 2016, duration: "115 دقيقة", rating: 7.5, plot: "جراح عصبي يصبح ساحراً ويحمي الأرض من التهديدات السحرية"},
+  {name: "Guardians of the Galaxy", type: "movie", year: 2014, duration: "121 دقيقة", rating: 8.0, plot: "مجموعة من المتمردين يصبحون أبطالاً غير متوقعين في حرب كونية"},
+  {name: "Guardians of the Galaxy Vol. 2", type: "movie", year: 2017, duration: "136 دقيقة", rating: 7.6, plot: "حراس المجرة يكشفون أسرار عائلة ستار لورد بينما يحمون الكون"},
+  {name: "Iron Man", type: "movie", year: 2008, duration: "126 دقيقة", rating: 7.9, plot: "مخترع ثري يصبح بطل خارق بعد صنعه بدلة متطورة لإنقاذ نفسه والعالم"},
+  {name: "Iron Man 2", type: "movie", year: 2010, duration: "124 دقيقة", rating: 6.9, plot: "آيرون مان يواجه منافسين جدد بينما يحارب مرضاً مميتاً"},
+  {name: "Iron Man 3", type: "movie", year: 2013, duration: "130 دقيقة", rating: 7.1, plot: "توني ستارك يواجه مندارين الذي يهدد بتدمير حياته"},
+  {name: "Spider-Man: Far From Home", type: "movie", year: 2019, duration: "129 دقيقة", rating: 7.4, plot: "بيتر باركر يواجه تهديدات جديدة أثناء رحلة مدرسية إلى أوروبا"},
+  {name: "Spider-Man: Homecoming", type: "movie", year: 2017, duration: "133 دقيقة", rating: 7.4, plot: "بيتر باركر يوازن بين حياته المدرسية وهويته كبطل خارق"},
+  {name: "The Avengers", type: "movie", year: 2012, duration: "143 دقيقة", rating: 8.0, plot: "أول تجمع لأعضاء أفنجرز لمواجهة شقيق ثور الذي يهدد الأرض"},
+  {name: "The Incredible Hulk", type: "movie", year: 2008, duration: "112 دقيقة", rating: 6.6, plot: "بروس بانر يبحث عن علاج لتحوله إلى هالك بينما تهرب من الجيش"},
+  {name: "Thor", type: "movie", year: 2011, duration: "115 دقيقة", rating: 7.0, plot: "إله الرعد الثائر ينفي إلى الأرض ويتعلم دروساً في التواضع"},
+  {name: "Thor: Ragnarok", type: "movie", year: 2017, duration: "130 دقيقة", rating: 7.9, plot: "ثور يحاول منع راجناروك بينما هو محتجز في عالم غريب"},
+  {name: "Thor: The Dark World", type: "movie", year: 2013, duration: "112 دقيقة", rating: 6.8, plot: "ثور يحارب عرقاً قديماً يهدد بإغراق الكون في الظلام"},
+
+  // Spider-Man Movies
+  {name: "Spider-Man", type: "movie", year: 2002, duration: "121 دقيقة", rating: 7.3, plot: "بيتر باركر يكتسب قوى عنكبوتية ويصبح بطل مدينة نيويورك"},
+  {name: "Spider-Man 2", type: "movie", year: 2004, duration: "127 دقيقة", rating: 7.3, plot: "بيتر باركر يواجه دكتور أوكتوبوس بينما يكافح مع حياته المزدوجة"},
+  {name: "Spider-Man 3", type: "movie", year: 2007, duration: "139 دقيقة", rating: 6.2, plot: "بيتر يواجه أعداء جدد بينما تؤثر عليه مادة سوداء غريبة"},
+  {name: "The Amazing Spider-Man", type: "movie", year: 2012, duration: "136 دقيقة", rating: 6.9, plot: "إعادة سرد لقصة أصل سبايدرمان مع أعداء جدد وأسرار عائلية"},
+  {name: "The Amazing Spider-Man 2", type: "movie", year: 2014, duration: "142 دقيقة", rating: 6.6, plot: "بيتر باركر يواجه إلكترو بينما يكشف أسراراً عن والديه"},
+  {name: "Spider-Man: Into the Spider-Verse", type: "movie", year: 2018, duration: "117 دقيقة", rating: 8.4, plot: "مايلز موراليس يكتشف عالم الأبعاد المتعددة مع أصدقائه من سبايدرمان"},
+
+  // X-Men Movies
+  {name: "Logan", type: "movie", year: 2017, duration: "137 دقيقة", rating: 8.1, plot: "قصة أخيرة لوولفرين في عالم حيث تختفي المواهب الخارقة"},
+  {name: "X-Men: First Class", type: "movie", year: 2011, duration: "132 دقيقة", rating: 7.7, plot: "قصة بداية فريق إكس-من خلال علاقة تشارلز وإريك المعقدة"},
+  {name: "X-Men: Apocalypse", type: "movie", year: 2016, duration: "144 دقيقة", rating: 6.9, plot: "أقوى طفرة في التاريخ تستيقظ وتريد تدمير الحضارة الإنسانية"},
+  {name: "X-Men Origins: Wolverine", type: "movie", year: 2009, duration: "107 دقيقة", rating: 6.5, plot: "قصة أصل وولفرين وكيف حصل على هيكله العظمي المصنوع من الأدمنتيوم"},
+  {name: "X-Men: The Last Stand", type: "movie", year: 2006, duration: "104 دقيقة", rating: 6.6, plot: "إكس-من يواجهون أزمة عندما يتم اكتشاف علاج للطفرات"},
+  {name: "X2: X-Men United", type: "movie", year: 2003, duration: "134 دقيقة", rating: 7.4, plot: "إكس-من يتحدون مع ماغنيتو لمواجهة تهديد جديد للطفرات"},
+  {name: "X-Men", type: "movie", year: 2000, duration: "104 دقيقة", rating: 7.3, plot: "بداية فريق إكس-من وصراعهم مع ماغنيتو الذي يريد تغيير البشرية"},
+  {name: "X-Men: Days of Future Past", type: "movie", year: 2014, duration: "132 دقيقة", rating: 8.0, plot: "وولفرين يسافر عبر الزمن لمنع حدث سيؤدي إلى إبادة الطفرات"},
+  {name: "Deadpool 2: Super Duper Cut", type: "movie", year: 2018, duration: "134 دقيقة", rating: 7.7, plot: "ديدبول يشكل فريق لحماية صبي من سايكوباتي مسافر عبر الزمن"},
+  {name: "Deadpool", type: "movie", year: 2016, duration: "108 دقيقة", rating: 8.0, plot: "مرتزق سابق يحصل على قوى شفاء ويصبح البطل غير التقليدي ديدبول"},
+  {name: "Venom", type: "movie", year: 2018, duration: "112 دقيقة", rating: 6.6, plot: "صحفي يندمج مع كائن فضائي ليصبح الوحش فينوم"},
+
+  // TV Shows
+  {name: "Banshee", type: "series", year: 2013, duration: "4 مواسم", rating: 8.4, plot: "سجين سابق يتظاهر بأنه شريف في بلدة صغيرة مليئة بالجرائم"},
+  {name: "Barbarians", type: "series", year: 2020, duration: "2 مواسم", rating: 7.0, plot: "دراما تاريخية عن القبائل الجرمانية التي قاتلت الإمبراطورية الرومانية"},
+  {name: "Better Call Saul", type: "series", year: 2015, duration: "6 مواسم", rating: 8.8, plot: "قصة أصل محامي الجريمة سول جودمان قبل أحداث بريكينج باد"},
+  {name: "Breaking Bad", type: "series", year: 2008, duration: "5 مواسم", rating: 9.5, plot: "مدرس كيمياء يصنع الميثامفيتامين لتأمين مستقبل عائلته قبل موته"},
+  {name: "Chernobyl", type: "series", year: 2019, duration: "5 حلقات", rating: 9.4, plot: "سرد درامي لكارثة تشيرنوبيل النووية وتداعياتها"},
+  {name: "Elite", type: "series", year: 2018, duration: "7 مواسم", rating: 7.5, plot: "طلاب في مدرسة إسبانية نخبوية تتداخل حياتهم مع جريمة قتل"},
+  {name: "Friends", type: "series", year: 1994, duration: "10 مواسم", rating: 8.9, plot: "حياة مجموعة أصدقاء في نيويورك وعلاقاتهم ومغامراتهم الكوميدية"},
+  {name: "Hannibal", type: "series", year: 2013, duration: "3 مواسم", rating: 8.5, plot: "قصة العلاقة المعقدة بين المحقق ويل غراهام والطبيب هانيبال ليكتر"},
+  {name: "How I Met Your Mother", type: "series", year: 2005, duration: "9 مواسم", rating: 8.3, plot: "تيد موسبي يروي لأطفاله قصة كيف التقى بأمهم عبر سلسلة من الذكريات"},
+  {name: "House", type: "series", year: 2004, duration: "8 مواسم", rating: 8.7, plot: "طبيب تشخيصي غريب الأطوار يحل حالات طبية غامضة مع فريقه"},
+  {name: "Legacies", type: "series", year: 2018, duration: "4 مواسم", rating: 7.3, plot: "استكمال لسلسلة The Originals تركز على ابنة كلاوس ميكايلسون"},
+  {name: "Lucifer", type: "series", year: 2016, duration: "6 مواسم", rating: 8.1, plot: "الشيطان يترك الجحيم ويعيش في لوس أنجلوس حيث يساعد الشرطة"},
+  {name: "Prison Break", type: "series", year: 2005, duration: "5 مواسم", rating: 8.3, plot: "رجل يخطط لتفاصيل هروبه من السجن لإنقاذ أخيه البريء"},
+  {name: "Sherlock", type: "series", year: 2010, duration: "4 مواسم", rating: 9.1, plot: "تحفة حديثة لشرلوك هولمز في لندن المعاصرة مع د.واتسون"},
+  {name: "Supernatural", type: "series", year: 2005, duration: "15 مواسم", rating: 8.4, plot: "شقيقان يصطادان الكائنات الخارقة للطبيعة عبر أمريكا"},
+  {name: "Taboo", type: "series", year: 2017, duration: "1 موسم", rating: 8.4, plot: "رجل غامض يعود إلى لندن في القرن التاسع عشر لاستعادة ميراثه"},
+  {name: "The 100", type: "series", year: 2014, duration: "7 مواسم", rating: 7.6, plot: "مجموعة من الشباب يرسلون إلى الأرض بعد دمار نووي لاختبار إمكانية العيش"},
+  {name: "The Punisher", type: "series", year: 2017, duration: "2 مواسم", rating: 8.5, plot: "فرانك كاسل يصبح الجندي الانتقامي بعد مقتل عائلته"},
+  {name: "WandaVision", type: "series", year: 2021, duration: "1 موسم", rating: 8.0, plot: "واندا وفيجن يعيشان حياة مثالية غريبة تخفي أسراراً مظلمة"},
+  {name: "You", type: "series", year: 2018, duration: "4 مواسم", rating: 7.7, plot: "رجل وسواسي يتابع النساء ويصبح مهووساً بهن بطريقة خطيرة"},
+  {name: "Justice League Dark: Apokolips War", type: "movie", year: 2020, duration: "90 دقيقة", rating: 8.0, plot: "معركة نهائية ضد دارك سايد حيث يواجه أبطال الأرض تهديداً يهدد بتدمير الكون بأكمله"},
+  
+
+];
+
+    function translateType(type) {
+        switch(type) {
+            case "movie": return "فيلم";
+            case "series": return "مسلسل";
+            case "anime": return "أنمي";
+            default: return "غير معروف";
+        }
+    }
+
+    function updateStats(data) {
+        document.getElementById("totalCount").textContent = data.length;
+        document.getElementById("movieCount").textContent = data.filter(i => i.type === "movie").length;
+        document.getElementById("seriesCount").textContent = data.filter(i => i.type === "series").length;
+
+        const ratings = data.filter(i => typeof i.rating === "number").map(i => i.rating);
+        const avg = ratings.length ? (ratings.reduce((a, b) => a + b, 0) / ratings.length) : 0;
+        document.getElementById("avgRating").textContent = avg.toFixed(1);
+    }
+
+    function renderTable(data) {
+        const tableBody = document.getElementById("tableBody");
+        tableBody.innerHTML = "";
+        if (data.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="no-results">لا توجد نتائج مطابقة</td></tr>';
+            return;
+        }
+        data.forEach(item => {
+            const ratingClass = typeof item.rating === "number" 
+                ? item.rating >= 8 ? "rating-high" : item.rating >= 6 ? "rating-medium" : "rating-low"
+                : "";
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${item.name}</td>
+                <td><span class="type-badge ${item.type}">${translateType(item.type)}</span></td>
+                <td class="year">${item.year ?? ""}</td>
+                <td class="duration">${item.duration ?? ""}</td>
+                <td><span class="rating ${ratingClass}">${item.rating ?? ""}</span></td>
+                <td class="plot">${item.plot ?? ""}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // متغيرات الحالة
+    let activeData = [...contentDatabase];
+    let currentFilter = "all";
+    let currentSort = null;
+
+    // تصفية حسب النوع
+    function filterContent(type) {
+        currentFilter = type;
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            if(btn.hasAttribute('data-type')){
+                btn.classList.toggle('active', btn.getAttribute('data-type') === type);
+            }
+        });
+        activeData = type === "all" ? [...contentDatabase] : contentDatabase.filter(item => item.type === type);
+        if(currentSort === "rating") sortByRating(true);
+        else if(currentSort === "year") sortByYear(true);
+        else {
+            renderTable(activeData);
+            updateStats(activeData);
+        }
+    }
+
+    // فرز حسب التقييم
+    function sortByRating(keepSort=false) {
+        if(!keepSort) currentSort = "rating";
+        activeData.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+        renderTable(activeData);
+        updateStats(activeData);
+        document.getElementById("ratingSortBtn").classList.add("active");
+        document.getElementById("yearSortBtn").classList.remove("active");
+    }
+
+    // فرز حسب السنة
+    function sortByYear(keepSort=false) {
+        if(!keepSort) currentSort = "year";
+        activeData.sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
+        renderTable(activeData);
+        updateStats(activeData);
+        document.getElementById("yearSortBtn").classList.add("active");
+        document.getElementById("ratingSortBtn").classList.remove("active");
+    }
+
+    // البحث
+    document.getElementById("searchInput").addEventListener("input", function() {
+        const keyword = this.value.trim().toLowerCase();
+        const filtered = activeData.filter(item => item.name.toLowerCase().includes(keyword));
+        renderTable(filtered);
+        updateStats(filtered);
+    });
+
+    // ربط أزرار التصفية
+    document.querySelectorAll('.filter-btn[data-type]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterContent(this.getAttribute('data-type'));
+        });
+    });
+
+    // ربط أزرار الفرز
+    document.getElementById("ratingSortBtn").addEventListener('click', function() {
+        sortByRating();
+    });
+    document.getElementById("yearSortBtn").addEventListener('click', function() {
+        sortByYear();
+    });
+
+    // تشغيل أولي
+    renderTable(activeData);
+    updateStats(activeData);
+
+    </script>
+</body>
+</html>
